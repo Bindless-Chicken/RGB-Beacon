@@ -1,0 +1,5 @@
+export/
+*.bak
+*.kicad_pcb-bak
+*.net
+*.lib
