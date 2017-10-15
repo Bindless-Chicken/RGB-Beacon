@@ -3,23 +3,23 @@
 #include <avr/interrupt.h>
 #include "limits.h"
 
-// Pinout
-//	IN
-#define RED PB4
-#define GREEN PB0
-#define BLUE PB2
-//	OUT
-#define POTENTIOMETER PB3
-#define BUTTON PB1
+#include "pinout.h"
+
 
 #define UINT16_MAX USHRT_MAX
 
 // Counter stating the number of cycle in the PWM
 #define MAX_COUNTER 80
 
-volatile uint8_t pR, pG, pB;
 volatile uint16_t ButtonPressBuffer = 0;
 volatile uint16_t ButtonPressReader = 0;
+
+// Define the colors register
+struct EColors {
+	uint8_t Red;
+	uint8_t Green;
+	uint8_t Blue;
+} Colors;
 
 void init(void)
 {
@@ -60,27 +60,27 @@ typedef enum E_DisplayMode{
 
 void Rainbow( const int adc)
 {
-	if(pB > 0x00 && pR == MAX_COUNTER && pG == 0x00) {
-		pB-=1;
+	if(Colors.Blue > 0x00 && Colors.Red == MAX_COUNTER && Colors.Green == 0x00) {
+		Colors.Blue-=1;
 	}
-	if(pB == MAX_COUNTER && pR < MAX_COUNTER && pG == 0x00) {
-		pR+=1;
+	if(Colors.Blue == MAX_COUNTER && Colors.Red < MAX_COUNTER && Colors.Green == 0x00) {
+		Colors.Red+=1;
 	}
 
 	//Fade from green to blue
-	if(pG > 0x00 && pB == MAX_COUNTER && pR == 0x00) {
-		pG-=1;
+	if(Colors.Green > 0x00 && Colors.Blue == MAX_COUNTER && Colors.Red == 0x00) {
+		Colors.Green-=1;
 	}
-	if(pG == MAX_COUNTER && pB < MAX_COUNTER && pR == 0x00) {
-		pB+=1;
+	if(Colors.Green == MAX_COUNTER && Colors.Blue < MAX_COUNTER && Colors.Red == 0x00) {
+		Colors.Blue+=1;
 	}
 
 	//Fade from red to green
-	if(pR > 0x00 && pG == MAX_COUNTER && pB == 0x00) {
-		pR-=1;
+	if(Colors.Red > 0x00 && Colors.Green == MAX_COUNTER && Colors.Blue == 0x00) {
+		Colors.Red-=1;
 	}
-	if(pR == MAX_COUNTER && pG < MAX_COUNTER && pB == 0x00) {
-		pG+=1;
+	if(Colors.Red == MAX_COUNTER && Colors.Green < MAX_COUNTER && Colors.Blue == 0x00) {
+		Colors.Green+=1;
 	}
 
 	for(uint8_t i=0; i<adc; ++i)
@@ -91,36 +91,36 @@ void Rainbow( const int adc)
 
 void Light( const int adc)
 {
-	pR = pB = MAX_COUNTER;
-	pG = 0;
+	Colors.Red = Colors.Blue = MAX_COUNTER;
+	Colors.Green = 0;
 }
 
 void Red( const int adc)
 {
-	pR = MAX_COUNTER;
-	pG = pB = 0;
+	Colors.Red = MAX_COUNTER;
+	Colors.Green = Colors.Blue = 0;
 }
 
 void Green( const int adc)
 {
-	pG = MAX_COUNTER;
-	pR = pB = 0;
+	Colors.Green = MAX_COUNTER;
+	Colors.Red = Colors.Blue = 0;
 }
 
 void Blue( const int adc)
 {
-	pB = MAX_COUNTER;
-	pG = MAX_COUNTER;
-	pR = MAX_COUNTER;
+	Colors.Blue = MAX_COUNTER;
+	Colors.Green = MAX_COUNTER;
+	Colors.Red = MAX_COUNTER;
 }
 
 int main(void)
 {
 	init();
 
-	pR = MAX_COUNTER;
-	pG = 0;
-	pB = 0;
+	Colors.Red = MAX_COUNTER;
+	Colors.Green = 0;
+	Colors.Blue = 0;
 
 	DisplayMode currentMode = EGREEN;
 
@@ -133,9 +133,9 @@ int main(void)
 
 		if(ButtonPressReader > 6000)
 		{
-			pR = MAX_COUNTER;
-			pG = MAX_COUNTER;
-			pB = 0;
+			Colors.Red = MAX_COUNTER;
+			Colors.Green = MAX_COUNTER;
+			Colors.Blue = 0;
 
 			_delay_ms(2000);
 
@@ -155,9 +155,9 @@ int main(void)
 			switch(currentMode)
 			{
 			case RAINBOW:
-				pR = MAX_COUNTER;
-				pG = 0;
-				pB = 0;
+				Colors.Red = MAX_COUNTER;
+				Colors.Green = 0;
+				Colors.Blue = 0;
 				func = &Rainbow;
 			break;
 			case ERED:
@@ -185,17 +185,18 @@ volatile uint8_t pwm_counter = 0x00;
 ISR(TIM0_OVF_vect)
 {
 	uint8_t portb_buffer= 0xFF;
-	if( pR <= pwm_counter)
+
+	if( Colors.Red <= pwm_counter)
 	{
 		portb_buffer &= ~(_BV(RED));
 	}
 
-	if( pG <= pwm_counter)
+	if( Colors.Green <= pwm_counter)
 	{
 		portb_buffer &= ~(_BV(GREEN));
 	}
 
-	if( pB <= pwm_counter)
+	if( Colors.Blue <= pwm_counter)
 	{
 		portb_buffer &= ~(_BV(BLUE));
 	}
