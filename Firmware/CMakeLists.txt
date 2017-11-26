@@ -6,4 +6,4 @@ include( avr.cmake )
 
 project( RGB-Beacon )
 
-add_avr_executable( RGB-Beacon RGB-Beacon/main.cpp )
+add_avr_executable( RGB-Beacon RGB-Beacon/main.c )

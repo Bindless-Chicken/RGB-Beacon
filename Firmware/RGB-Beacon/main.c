@@ -1,4 +1,5 @@
 #include <avr/io.h>
+#define F_CPU 9600000
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include "limits.h"
@@ -6,7 +7,7 @@
 #include "pinout.h"
 
 
-#define UINT16_MAX USHRT_MAX
+// #define UINT16_MAX USHRT_MAX
 
 // Counter stating the number of cycle in the PWM
 #define MAX_COUNTER 80
@@ -83,7 +84,8 @@ void Rainbow( const int adc)
 		Colors.Green+=1;
 	}
 
-	for(uint8_t i=0; i<adc; ++i)
+	uint8_t i;
+	for(i=0; i<adc; ++i)
 	{
 		_delay_ms(1);
 	}
@@ -148,7 +150,7 @@ int main(void)
 			}
 			else
 			{
-				currentMode = DisplayMode((int)currentMode +1);
+				currentMode = (DisplayMode)((int)currentMode +1);
 			}
 
 			// Change the function based on the mode
